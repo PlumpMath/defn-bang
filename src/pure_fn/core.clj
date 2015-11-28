@@ -11,8 +11,11 @@
 
 ;; What about implicit do in let
 
+(defn marked-impure? [v]
+  (:impure? (meta v)))
+
 (def impure-fns
-  '#{do dotimes dorun doall vswap! vreset! volatile!
+  '#{do dotimes dorun doall vswap! vreset! volatile! deref
      pr prn print printf println doto spit run!})
 
 (defn all-symbols
@@ -27,9 +30,11 @@
       acc)))
 
 (defn impure? [form]
-  (not (empty? (set/intersection impure-fns (all-symbols form)))))
+  (let [syms (all-symbols form)]
+    (or (some? (some marked-impure? (map var syms)))
+        (not (empty? (set/intersection impure-fns syms))))))
 
-(defn foo
+(defn ^{:impure? true} foo
   "I don't do a whole lot."
   [x]
   (println x "Hello, World!"))

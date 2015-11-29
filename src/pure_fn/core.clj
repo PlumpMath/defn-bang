@@ -11,8 +11,8 @@
 
 ;; What about implicit do in let
 
-(defn marked-impure? [v]
-  (:impure? (meta v)))
+(defn marked-pure? [v]
+  (:pure? (meta v)))
 
 (def impure-fns
   '#{do dotimes dorun doall vswap! vreset! volatile! deref
@@ -29,12 +29,16 @@
         (recur (rest form) (conj acc (first form))))
       acc)))
 
-(defn impure? [form]
+(defn pure? [form]
   (let [syms (all-symbols form)]
-    (or (some? (some marked-impure? (map var syms)))
+    (or (every? marked-pure? (map var syms))
         (not (empty? (set/intersection impure-fns syms))))))
 
-(defn ^{:impure? true} foo
+(defn ^{:pure? false} foo
   "I don't do a whole lot."
   [x]
   (println x "Hello, World!"))
+
+(defn ^{:pure? true} bad
+  []
+  1)
